@@ -15,32 +15,17 @@ feature_names = joblib.load("model_features.pkl")
 st.set_page_config(
     page_title="Job Success Predictor",
     page_icon="💼",
-    layout="centered"
+    layout="wide"  # use wide to allow left column
 )
 
 # =============================
-# HEADER / TITLE
+# LEFT INFO COLUMN (Tips / About / Stats)
 # =============================
-st.markdown("## ✨ Welcome to the Job Predictor ✨")
-st.title("💼 Job Finding Prediction System")
+left_col_width = 0.25  # 25% for left tips
+main_col_width = 0.75  # 75% for main content
 
-st.markdown(
-    """
-This AI-based application estimates the **probability of finding a job**
-using education, skills, experience, and job-search behavior.
-
-⚠️ *Predictions are probabilistic and meant for decision support — not guarantees.*
-"""
-)
-st.divider()
-
-# =============================
-# LAYOUT: LEFT INFO COLUMN + MAIN INPUTS
-# =============================
-col1, col2 = st.columns([0.3, 0.7])
-
-# ----- LEFT INFO / DECORATION -----
-with col1:
+col_left, col_main_empty = st.columns([left_col_width, main_col_width])
+with col_left:
     st.markdown("### 💡 Tips")
     st.markdown(
         "- Adjust sliders according to your real profile\n"
@@ -61,8 +46,23 @@ with col1:
     st.metric("Features Used", "301")
     st.metric("ML Models", "4")
 
-# ----- RIGHT MAIN INPUTS -----
-with col2:
+# =============================
+# CENTERED MAIN CONTENT
+# =============================
+with st.container():
+    st.markdown("## ✨ Welcome to the Job Predictor ✨")
+    st.title("💼 Job Finding Prediction System")
+
+    st.markdown(
+        """
+    This AI-based application estimates the **probability of finding a job**
+    using education, skills, experience, and job-search behavior.
+
+    ⚠️ *Predictions are probabilistic and meant for decision support — not guarantees.*
+    """
+    )
+    st.divider()
+
     st.subheader("📊 Candidate Profile")
 
     education = st.slider("🎓 Education Level", 0.0, 1.0, 0.5)
