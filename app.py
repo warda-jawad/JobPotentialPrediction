@@ -15,16 +15,17 @@ feature_names = joblib.load("model_features.pkl")
 st.set_page_config(
     page_title="Job Success Predictor",
     page_icon="💼",
-    layout="wide"  # use wide to allow left column
+    layout="wide"  # use full width
 )
 
 # =============================
-# LEFT INFO COLUMN (Tips / About / Stats)
+# MAIN LAYOUT: LEFT INFO + RIGHT INPUTS
 # =============================
-left_col_width = 0.25  # 25% for left tips
-main_col_width = 0.75  # 75% for main content
+col_left, col_right = st.columns([0.3, 0.7])
 
-col_left, col_main_empty = st.columns([left_col_width, main_col_width])
+# -----------------------------
+# LEFT COLUMN: Tips / About / Stats
+# -----------------------------
 with col_left:
     st.markdown("### 💡 Tips")
     st.markdown(
@@ -46,20 +47,20 @@ with col_left:
     st.metric("Features Used", "301")
     st.metric("ML Models", "4")
 
-# =============================
-# CENTERED MAIN CONTENT
-# =============================
-with st.container():
+# -----------------------------
+# RIGHT COLUMN: Title + Sliders + Prediction
+# -----------------------------
+with col_right:
     st.markdown("## ✨ Welcome to the Job Predictor ✨")
     st.title("💼 Job Finding Prediction System")
 
     st.markdown(
         """
-    This AI-based application estimates the **probability of finding a job**
-    using education, skills, experience, and job-search behavior.
+This AI-based application estimates the **probability of finding a job**
+using education, skills, experience, and job-search behavior.
 
-    ⚠️ *Predictions are probabilistic and meant for decision support — not guarantees.*
-    """
+⚠️ *Predictions are probabilistic and meant for decision support — not guarantees.*
+"""
     )
     st.divider()
 
