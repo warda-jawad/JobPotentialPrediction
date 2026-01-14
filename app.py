@@ -19,53 +19,81 @@ st.set_page_config(
 )
 
 # =============================
-# TITLE
+# TITLE & INTRO
 # =============================
 st.title("💼 Job Finding Prediction System")
+
 st.markdown(
     """
-    This application predicts whether a person is likely to **find a job**
-    based on education, skills, experience, and digital readiness.
+    This AI-based application estimates the **probability of finding a job**
+    using education, skills, experience, and job-search behavior.
+
+    ⚠️ *Predictions are probabilistic and meant for decision support — not guarantees.*
     """
 )
 
 st.divider()
 
 # =============================
-# USER INPUTS
+# USER INPUTS (NORMALIZED 0–1)
 # =============================
-st.subheader("📊 Enter Candidate Information")
+st.subheader("📊 Candidate Profile")
 
-education = st.slider("🎓 Education Level", 0.0, 10.0, 5.0)
-technical = st.slider("🛠 Technical Skills", 0.0, 10.0, 5.0)
-soft = st.slider("🤝 Soft Skills", 0.0, 10.0, 5.0)
-experience = st.slider("📄 Work Experience", 0.0, 10.0, 5.0)
-job_search = st.slider("🔍 Job Search Activity", 0.0, 10.0, 5.0)
-digital = st.slider("💻 Digital Presence", 0.0, 10.0, 5.0)
+education = st.slider("🎓 Education Level", 0.0, 1.0, 0.5)
+technical = st.slider("🛠 Technical Skills", 0.0, 1.0, 0.5)
+soft = st.slider("🤝 Soft Skills", 0.0, 1.0, 0.5)
+experience = st.slider("📄 Work Experience", 0.0, 1.0, 0.5)
+job_search = st.slider("🔍 Job Search Activity", 0.0, 1.0, 0.5)
+digital = st.slider("💻 Digital Presence", 0.0, 1.0, 0.5)
 
 # =============================
-# BUILD FEATURE VECTOR
+# WEAK PROFILE WARNING
 # =============================
-# Initialize all features with 0
+if (
+    education < 0.2 and
+    technical < 0.2 and
+    soft < 0.2 and
+    experience < 0.2
+):
+    st.warning(
+        "⚠️ Very limited profile strength detected. "
+        "Prediction confidence may be unreliable."
+    )
+
+# =============================
+# BUILD FEATURE VECTOR (SAFE)
+# =============================
 input_data = pd.DataFrame(
     np.zeros((1, len(feature_names))),
     columns=feature_names
 )
 
-# Inject values into representative feature groups
-for col in feature_names:
-    if col.startswith("edu_"):
-        input_data[col] = education
-    elif col.startswith("tech_"):
-        input_data[col] = technical
-    elif col.startswith("soft_"):
-        input_data[col] = soft
-    elif col.startswith("work_"):
-        input_data[col] = experience
-    elif col.startswith("jobsearch_"):
-        input_data[col] = job_search
-    elif col.startswith("digital_"):
-        input_data[col] = digital
+# Feature groups
+edu_cols = [c for c in feature_names if c.startswith("edu_")]
+tech_cols = [c for c in feature_names if c.startswith("tech_")]
+soft_cols = [c for c in feature_names if c.startswith("soft_")]
+work_cols = [c for c in feature_names if c.startswith("work_")]
+job_cols = [c for c in feature_names if c.startswith("jobsearch_")]
+digital_cols = [c for c in feature_names if c.startswith("digital_")]
+
+# Distribute impact (prevents inflation)
+for c in edu_cols:
+    input_data[c] = education / max(len(edu_cols), 1)
+
+for c in tech_cols:
+    input_data[c] = technical / max(len(tech_cols), 1)
+
+for c in soft_cols:
+    input_data[c] = soft / max(len(soft_cols), 1)
+
+for c in work_cols:
+    input_data[c] = experience / max(len(work_cols), 1)
+
+for c in job_cols:
+    input_data[c] = job_search / max(len(job_cols), 1)
+
+for c in digital_cols:
+    input_data[c] = digital / max(len(digital_cols), 1)
 
 # =============================
 # PREDICTION
@@ -73,20 +101,34 @@ for col in feature_names:
 st.divider()
 
 if st.button("🔮 Predict Job Outcome"):
-    probability = model.predict_proba(input_data)[0][1]
-    prediction = int(probability > 0.42)
+    raw_proba = model.predict_proba(input_data)[0][1]
+
+    # Calibrate displayed confidence
+    confidence = min(max(raw_proba, 0.05), 0.95)
+    prediction = int(raw_proba >= 0.42)
 
     st.subheader("📌 Prediction Result")
 
     if prediction == 1:
-        st.success(f"✅ Likely to get a job\n\nConfidence: {probability:.2%}")
+        st.success(
+            f"✅ **Likely to get a job**\n\n"
+            f"Estimated confidence: **{confidence:.2%}**"
+        )
     else:
-        st.error(f"❌ Unlikely to get a job\n\nConfidence: {1 - probability:.2%}")
+        st.error(
+            f"❌ **Unlikely to get a job**\n\n"
+            f"Estimated confidence: **{1 - confidence:.2%}**"
+        )
 
-    st.progress(probability)
+    st.progress(confidence)
+
+    st.caption(
+        "ℹ️ Confidence reflects statistical likelihood, "
+        "not certainty."
+    )
 
 # =============================
 # FOOTER
 # =============================
 st.markdown("---")
-st.caption("AI-based Job Prediction System | MSc AI Project")
+st.caption("AI-based Job Prediction System | MSc Artificial Intelligence Project")
